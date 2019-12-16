@@ -1,0 +1,178 @@
+- name: Install mandatory packages to make system more secure
+  tags: [init,apt,firewall]
+  apt:
+    state: present
+    update-cache: yes
+    cache_valid_time: 3600
+    name: "{{ packages }}"
+  vars:
+    packages:
+      - fail2ban
+      - git
+      - ufw
+
+
+- name: Initialise a git repository in /etc
+  tags: [init,git]
+  command: "git {{ item }}"
+  with_items:
+    - "init ."
+    - "add ."
+    - "commit . -m 'Commit by ansible'"
+  args:
+    chdir: /etc
+  ignore_errors: yes
+
+
+- name: Prefix apt URLs with 'fi.' (local mirror)
+  tags: [init,apt]
+  replace:
+    path: /etc/apt/sources.list
+    regexp: '^deb http://archive.ubuntu.com(.+)$'
+    replace: 'deb http://fi.archive.ubuntu.com\1'
+
+
+- name: Make sure the most important ports are open
+  tags: [init,firewall]
+  ufw:
+    rule: allow
+    name: "{{ item }}"
+  with_items:
+    - OpenSSH
+
+- name: Reject everything and enable UFW Firewall
+  tags: [init,firewall]
+  ufw:
+    state: enabled
+    policy: reject
+
+
+- name: Set hostname "{{ hostname }}"
+  tags: [init]
+  hostname:
+    name={{ hostname }}
+
+
+- name: Add hostname to /etc/hosts
+  tags: [init]
+  lineinfile:
+    dest=/etc/hosts
+    line="127.0.1.1 {{ hostname }}"
+
+
+- name: Generate some locales
+  tags: [init]
+  locale_gen:
+    name={{ item }}
+    state=present
+  with_items:
+    - en_GB.UTF-8
+    - en_US.UTF-8
+    - fi_FI.UTF-8
+
+
+- name: Set /etc/localtime to {{ timezone }}
+  tags: [init]
+  copy:
+    src=/usr/share/zoneinfo/{{ timezone }}
+    dest=/etc/localtime
+    owner=root
+    group=root
+    mode=0644
+    backup=yes
+
+
+- name: Set /etc/timezone to {{ timezone }}
+  tags: [init]
+  template:
+    dest=/etc/timezone
+    src=timezone.j2
+
+
+- name: update tzdata
+  tags: [init]
+  command: dpkg-reconfigure --frontend noninteractive tzdata
+
+
+- name: Update all packages to the latest version
+  tags: [init,apt]
+  apt:
+    upgrade: dist
+    update-cache: yes
+
+
+- name: Install mandatory packages to make system usable
+  tags: [init,apt]
+  apt:
+    state: present
+    update-cache: yes
+    cache_valid_time: 3600
+    name: "{{ packages }}"
+  vars:
+    packages:
+      - vim
+      - keychain
+      - sudo
+      - rsync
+      - screen
+      - smartmontools
+
+
+- name: Install mandatory packages to use other repositories
+  tags: [init,apt]
+  apt:
+    state: present
+    update-cache: yes
+    cache_valid_time: 3600
+    name: "{{ packages }}"
+  vars:
+    packages:
+      - apt-transport-https
+      - ca-certificates
+      - curl
+      - gnupg-agent
+      - software-properties-common
+
+
+- name: Install mandatory packages to compile stuff (etc. python modules)
+  tags: [init,apt,development]
+  apt:
+    state: present
+    update-cache: yes
+    cache_valid_time: 3600
+    name: "{{ packages }}"
+  vars:
+    packages:
+      - build-essential
+      - autoconf
+      - libtool
+      - gettext
+      - libatlas-base-dev
+      - python3-dev
+      - python3-virtualenv
+      - virtualenvwrapper
+      - python3-pip
+      - g++
+      - libxml2-dev
+      - libxslt-dev
+      - libyaml-dev
+      - libpng-dev
+      - libjpeg-dev
+      - libtiff5-dev
+      - libwebp-dev
+      - libjpeg-dev
+      - zlib1g-dev
+      - libfontconfig1-dev
+      - libxft-dev
+      - libfreetype6-dev
+
+
+- name: Commit all new files
+  tags: [init,git]
+  command: "git {{ item }}"
+  with_items:
+    - "add ."
+    - "commit . -m 'Commit by ansible'"
+  args:
+    chdir: /etc
+  ignore_errors: yes

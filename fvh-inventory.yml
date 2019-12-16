@@ -1,0 +1,11 @@
+all:
+  hosts:
+    citylogistiikka.fvh.io:
+  children:
+    finland:
+      hosts:
+        citylogistiikka.fvh.io:
+    hetzner:
+      hosts:
+        citylogistiikka.fvh.io:
+
