@@ -4,6 +4,8 @@ This repository contains Ansible playbooks for automatically
 install and configure various application combinations on
 Ubuntu 18.04 system.
 
+NOTE: this is only for internal demo purposes.
+
 ## Usage
 
 Copy your ssh public key to the server's root's .ssh/authorized_keys manually,
@@ -17,5 +19,4 @@ export REMOTEHOST=yourserver.example.org
 
 # Install and configure basics
 ansible-playbook -vv -i fvh-inventory.yml -u root server.yml --extra-vars "hostname=citylogistiikka.fvh.io"
-# ansible-playbook -vv -i "${REMOTEHOST}," -u root server.yml --extra-vars "hostname=${REMOTEHOST}" -e 'ansible_python_interpreter=/usr/bin/python3'
 ```
